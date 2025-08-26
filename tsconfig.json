@@ -3,6 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@firebase/auth": [
+        "./node_modules/@firebase/auth"
+      ],
       "@/*": [
         "./*"
       ]
@@ -11,6 +14,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    "**/*.jsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]
