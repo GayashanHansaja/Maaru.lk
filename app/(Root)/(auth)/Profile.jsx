@@ -1,16 +1,16 @@
+import { useRouter } from 'expo-router';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
   ActivityIndicator,
+  Image,
+  Pressable,
   ScrollView,
-  TouchableOpacity,
+  Text,
+  View,
 } from 'react-native';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../../FirebaseConfig';
 
 export default function Profile() {
@@ -40,9 +40,8 @@ export default function Profile() {
             uid: user.uid,
             email: user.email,
             profilePic: user.photoURL || null,
-            firstName: user.firstName || null,
-            lastName: user.lastName || null,
-            phone: user.phoneNumber || null,
+            firstName: user.displayName || '',
+            lastName: '',
           });
         }
       } catch (err) {
@@ -56,124 +55,173 @@ export default function Profile() {
     return () => unsubscribe();
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.replace('/(Root)/(auth)/Login');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1a73e8" />
-      </View>
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text className="text-gray-600 mt-4 text-base">Loading profile</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  if (error) {
+  if (error || !profile) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>Failed to load profile.</Text>
-      </View>
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <View className="flex-1 justify-center items-center px-6">
+          <Text className="text-red-600 text-lg font-semibold mb-2">Error loading profile</Text>
+          <Text className="text-gray-600 text-center mb-6">Could not load profile information</Text>
+          <Pressable 
+            onPress={() => router.replace('/(Root)/(auth)/Login')}
+            className="bg-blue-600 px-8 py-3 rounded-lg"
+          >
+            <Text className="text-white font-semibold">Back to Login</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  if (!profile) {
-    return (
-      <View style={styles.center}>
-        <Text>No profile available.</Text>
-      </View>
-    );
-  }
-
-  const fields = [
-    { key: 'firstName', label: 'First Name', value: profile.firstName || profile.first || '' },
-    { key: 'lastName', label: 'Last Name', value: profile.lastName || profile.last || '' },
-    { key: 'email', label: 'Email', value: profile.email || '' },
-    { key: 'phone', label: 'Phone', value: profile.phone || '' },
-    { key: 'address', label: 'Address', value: profile.address || '' },
-    { key: 'born', label: 'Born / Age', value: profile.born || profile.age || '' },
-    // add more fields if your documents contain them
-  ];
-
+  const fullName = `${profile.firstName || profile.first || ''} ${profile.lastName || profile.last || ''}`.trim();
   const avatarUri = profile.profilePic || profile.photoURL || null;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatarWrap}>
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : (
-            <View style={styles.placeholder}>
-              <Text style={styles.placeholderText}>
-                {(profile.firstName || profile.first || '').charAt(0).toUpperCase() ||
-                  (profile.lastName || profile.last || '').charAt(0).toUpperCase() ||
-                  'U'}
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1">
+        
+        {/* Header Section */}
+        <View className="bg-blue-600 px-6 pt-4 pb-20">
+          <View className="flex-row justify-between items-center">
+            <View>
+              <Text className="text-white text-2xl font-bold">Profile</Text>
+            </View>
+            <Pressable 
+              onPress={handleSignOut}
+              className="bg-white bg-opacity-20 px-4 py-2 rounded-lg"
+            >
+              <Text className="text-white font-medium text-sm">Sign Out</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Profile Card */}
+        <View className="mx-6 -mt-16 bg-white rounded-2xl shadow-lg p-6">
+          
+          {/* Avatar Section */}
+          <View className="items-center -mt-16 mb-6">
+            <View className="relative">
+              <View className="w-32 h-32 rounded-full bg-white p-1 shadow-lg">
+                {avatarUri ? (
+                  <Image 
+                    source={{ uri: avatarUri }} 
+                    className="w-full h-full rounded-full"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View className="w-full h-full rounded-full bg-blue-500 items-center justify-center">
+                    <Text className="text-white text-4xl font-bold">
+                      {fullName.charAt(0).toUpperCase() || profile.email?.charAt(0).toUpperCase() || 'U'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              
+              <Pressable className="absolute bottom-0 right-0 bg-blue-600 w-10 h-10 rounded-full items-center justify-center shadow-lg">
+                <Text className="text-white text-lg font-bold">+</Text>
+              </Pressable>
+            </View>
+            
+            <View className="items-center mt-4">
+              <Text className="text-gray-900 text-xl font-bold">
+                {fullName || 'User Name'}
+              </Text>
+              <Text className="text-gray-500 text-base">
+                {profile.email}
               </Text>
             </View>
-          )}
-        </View>
-        <Text style={styles.name}>
-          {(profile.firstName || profile.first || '') +
-            (profile.lastName || profile.last ? ' ' + (profile.lastName || profile.last) : '') ||
-            profile.email}
-        </Text>
-
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => router.push('/(Root)/(auth)/EditProfile')}
-        >
-          <Text style={styles.editText}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Profile Details</Text>
-        {fields.map((f) => (
-          <View key={f.key} style={styles.row}>
-            <Text style={styles.rowLabel}>{f.label}</Text>
-            <Text style={styles.rowValue}>{f.value || '-'}</Text>
           </View>
-        ))}
-      </View>
-    </ScrollView>
+
+          {/* Stats Section */}
+          <View className="flex-row justify-around py-6 bg-gray-50 rounded-xl mb-6">
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-blue-600">15</Text>
+              <Text className="text-gray-600 text-sm">Orders</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-green-600">4.8</Text>
+              <Text className="text-gray-600 text-sm">Rating</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-purple-600">2</Text>
+              <Text className="text-gray-600 text-sm">Years</Text>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View className="space-y-3">
+            <Pressable className="bg-blue-600 py-4 rounded-xl">
+              <Text className="text-white font-semibold text-base text-center">Edit Profile</Text>
+            </Pressable>
+            
+            <Pressable className="border border-gray-200 py-4 rounded-xl">
+              <Text className="text-gray-700 font-semibold text-base text-center">Settings</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Personal Information */}
+        <View className="mx-6 mt-6 bg-white rounded-2xl shadow-lg p-6">
+          <Text className="text-xl font-bold text-gray-900 mb-6">Personal Information</Text>
+          
+          <View className="space-y-4">
+            {[
+              { label: 'First Name', value: profile.firstName || profile.first || 'Not provided' },
+              { label: 'Last Name', value: profile.lastName || profile.last || 'Not provided' },
+              { label: 'Email', value: profile.email || 'Not provided' },
+              { label: 'Phone', value: profile.phone || 'Not provided' },
+              { label: 'Address', value: profile.address || 'Not provided' },
+              { label: 'Age', value: profile.born || profile.age || 'Not provided' },
+            ].map((item, index) => (
+              <View key={index} className="flex-row justify-between items-center py-3 border-b border-gray-100">
+                <Text className="text-gray-600 font-medium">{item.label}</Text>
+                <Text className="text-gray-900 font-semibold flex-1 text-right" numberOfLines={1}>
+                  {item.value}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Menu Options */}
+        <View className="mx-6 mt-6 bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <Text className="text-xl font-bold text-gray-900 mb-6">Account</Text>
+          
+          <View className="space-y-1">
+            {[
+              { title: 'Order History' },
+              { title: 'Payment Methods' },
+              { title: 'Notifications' },
+              { title: 'Privacy Settings' },
+              { title: 'Help Support' },
+            ].map((item, index) => (
+              <Pressable key={index} className="flex-row items-center justify-between py-4 px-2 rounded-lg">
+                <Text className="text-gray-900 font-medium">{item.title}</Text>
+                <Text className="text-gray-400 text-xl">›</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: '#fff', flexGrow: 1 },
-  header: { alignItems: 'center', marginBottom: 20 },
-  avatarWrap: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    overflow: 'hidden',
-    marginBottom: 12,
-    backgroundColor: '#eef2ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatar: { width: '100%', height: '100%' },
-  placeholder: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#c7d2fe',
-  },
-  placeholderText: { fontSize: 40, color: '#fff', fontWeight: '700' },
-  name: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
-  editButton: {
-    marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#1a73e8',
-    borderRadius: 8,
-  },
-  editText: { color: '#fff', fontWeight: '600' },
-
-  section: { marginTop: 8, backgroundColor: '#fafafa', borderRadius: 10, padding: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 10 },
-
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  rowLabel: { color: '#666', fontWeight: '600' },
-  rowValue: { color: '#222', maxWidth: '60%', textAlign: 'right' },
-
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  error: { color: '#d32f2f' },
-});

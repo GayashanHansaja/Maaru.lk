@@ -1,5 +1,5 @@
-import SplashScreen from "./(Root)/(tabs)/SplashScreen";
-
+import SplashScreen from "./(Root)/SplashScreen";
+import '../global.css';
 
 const Home = () => {
   return <SplashScreen />;

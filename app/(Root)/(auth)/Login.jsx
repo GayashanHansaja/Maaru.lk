@@ -1,9 +1,8 @@
-// ...existing code...
-import React, { useState } from 'react';
-import { Alert, Text, View, StyleSheet, TextInput, Button, ScrollView, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../../FirebaseConfig';
 
 export default function Login() {
@@ -22,7 +21,6 @@ export default function Login() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log('User signed in:', userCredential.user.uid);
       Alert.alert('Success', 'Logged in');
-      // navigate to main tabs (adjust route if your tabs route differs)
       router.replace('/(Root)/(tabs)/ProductList');
     } catch (error) {
       console.error('Login error:', error);
@@ -33,62 +31,87 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Sign In</Text>
-
-        <View style={styles.field}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1">
+        
+        {/* Header Section */}
+        <View className="bg-blue-600 px-6 pt-8 pb-20">
+          <View className="items-center">
+            <Text className="text-white text-3xl font-bold">Welcome Back</Text>
+            <Text className="text-white text-opacity-80 text-base mt-2">Sign in to continue to Maaru.LK</Text>
+          </View>
         </View>
 
-        <View style={styles.buttonWrap}>
-          {isSubmitting ? (
-            <ActivityIndicator size="small" color="#1a73e8" />
-          ) : (
-            <Button title="Login" onPress={handleLogin} />
-          )}
+        {/* Login Card */}
+        <View className="mx-6 -mt-16 bg-white rounded-2xl shadow-lg p-6">
+          
+          {/* Logo/Icon Section */}
+          <View className="items-center -mt-16 mb-8">
+            <View className="w-32 h-32 rounded-full bg-white p-1 shadow-lg">
+              <View className="w-full h-full rounded-full bg-blue-500 items-center justify-center">
+                <Text className="text-white text-4xl font-bold">M</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Form Section */}
+          <View className="space-y-5">
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Email Address</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
+              />
+            </View>
+
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Password</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
+                secureTextEntry
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
+              />
+            </View>
+
+            {/* Login Button */}
+            <Pressable
+              onPress={handleLogin}
+              className="bg-blue-600 py-4 rounded-xl mt-6"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white font-semibold text-center text-base">Sign In</Text>
+              )}
+            </Pressable>
+
+            {/* Forgot Password */}
+            <Pressable onPress={() => router.push('/(Root)/(auth)/ForgotPassword')} className="py-2 items-center">
+              <Text className="text-gray-500">Forgot Password?</Text>
+            </Pressable>
+          </View>
         </View>
 
-        <View style={styles.bottom}>
-          <Text style={styles.switchText} onPress={() => router.push('/(Root)/(auth)/SignUp')}>
-            Don't have an account? Sign up
-          </Text>
+        {/* Bottom Actions */}
+        <View className="mx-6 mt-6 bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <View className="space-y-3">
+            <Pressable onPress={() => router.push('/(Root)/(auth)/SignUp')} className="border border-gray-200 py-4 rounded-xl">
+              <Text className="text-gray-700 font-semibold text-center">Create New Account</Text>
+            </Pressable>
+
+            <Pressable onPress={() => router.push('/(Root)/(tabs)/ProductList')} className="py-3 items-center">
+              <Text className="text-gray-500">Continue as Guest</Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f0f4f8' },
-  container: { padding: 16, flexGrow: 1, justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: '700', color: '#222', marginBottom: 12, textAlign: 'center' },
-  field: { width: '100%' },
-  input: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-  },
-  buttonWrap: { marginTop: 8 },
-  bottom: { marginTop: 20, alignItems: 'center' },
-  switchText: { color: '#1a73e8' },
-});
