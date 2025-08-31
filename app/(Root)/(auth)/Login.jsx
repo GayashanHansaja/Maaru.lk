@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword , signInWithPopup, GoogleAuthProvider, getAuth} from 'firebase/auth';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -29,6 +30,38 @@ export default function Login() {
       setIsSubmitting(false);
     }
   };
+  
+  const handleGoogleLogin = async () => {
+    setIsGoogleSubmitting(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // This gives you a Google Access Token
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential.accessToken;
+      
+      // The signed-in user info
+      const user = result.user;
+      
+      console.log('Google sign-in successful:', user.uid);
+      Alert.alert('Success', 'Signed in with Google');
+      router.replace('/(Root)/(tabs)/ProductList');
+      
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      
+      // Handle Errors here
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      const email = error.customData?.email;
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      
+      Alert.alert('Google Sign-In Failed', errorMessage || 'An error occurred during Google authentication');
+    } finally {
+            setIsGoogleSubmitting(false);
+    }
+};
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -89,6 +122,29 @@ export default function Login() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text className="text-white font-semibold text-center text-base">Sign In</Text>
+              )}
+            </Pressable>
+
+            {/* devide */}
+            <View className="flex-row items-center my-6">
+              <View className="flex-1 h-px bg-gray-200" />
+              <Text className="mx-4 text-gray-500 text-sm">or</Text>
+              <View className="flex-1 h-px bg-gray-200" />
+            </View>
+
+            {/* Google Login Button */}
+            <Pressable
+              onPress={handleGoogleLogin}
+              className="bg-white border border-gray-300 py-4 rounded-xl flex-row items-center justify-center"
+              disabled={isGoogleSubmitting}
+            >
+              {isGoogleSubmitting ? (
+                <ActivityIndicator color="#4285F4" />
+              ) : (
+                <>
+                  <Text className="text-xl mr-3">G</Text>
+                  <Text className="text-gray-700 font-semibold text-base">Continue with Google</Text>
+                </>
               )}
             </Pressable>
 
