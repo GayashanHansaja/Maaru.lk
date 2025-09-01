@@ -7,7 +7,7 @@ export default function SplashScreen() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/(Root)/(tabs)/ProductList'); // Adjust the path if needed
+      router.replace('/(Root)/(auth)/Login'); // Adjust the path if needed
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -15,7 +15,7 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../../../assets/images/maaru_splash.png")}
+        source={require("../../assets/images/maaru_splash.png")}
         style={styles.logo}
       />
       <Text style={styles.title}>Welcome to Maaru.LK</Text>
